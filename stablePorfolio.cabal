@@ -1,0 +1,10 @@
+Name:                stablePortfolio
+Version:             0.0
+Description:         Return 3 Symbols in Portfolio which will have stable Close prise in input Period
+License:             GPL
+Author:              Evgene Oskin
+Build-Type:          Simple
+Cabal-Version:       >=1.2
+Executable StablePortfolio
+  Main-is:           SRC/StablePortfolio.hs
+  Build-Depends:     filepath, directory, regex-posix, old-locale, split, GA, random, containers, time, base >= 3 && < 5
