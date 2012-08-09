@@ -24,8 +24,8 @@ getDataFromStr str = (symbol, price)
           prices = Prelude.map read (init (drop 2 splitedStr)) :: [Double]
           price = last prices
                    
-pickDates :: String -> String -> (String, String) -> Bool
-pickDates x market (low, hi) = (strForCompare >= low) && (strForCompare <= hi)
+pickDates :: String -> String -> [String] -> Bool
+pickDates x market [low, hi] = (strForCompare >= low) && (strForCompare <= hi)
     where strForCompare = changeDateFormat (last $ endBy "/" x) (market ++ "_%Y%m%d.csv") "%Y%m%d"
 
 concatCsvData :: Ord k => [[(k, a)]] -> Data.Map.Map k [a]

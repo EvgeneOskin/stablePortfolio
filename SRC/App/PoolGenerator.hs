@@ -10,8 +10,8 @@ import System.Directory
 import Data.List
 import Control.Monad (forM)
 import Data.Map (toAscList)
-    
-makeTotalPool:: String -> String -> (String, String) -> IO [(String, [Double])]
+
+makeTotalPool :: String -> String -> [String] -> IO [(String, [Double])]
 makeTotalPool market inDN timePeriod = do
   allCsvFiles <- dirSearchForCsvFiles inDN market
   let csvFilesInNeededTime = filter (\x->pickDates x market timePeriod) allCsvFiles
