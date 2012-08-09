@@ -12,45 +12,40 @@ import Control.Monad (forM)
 import Data.Map (toAscList)
 
 makeTotalPool :: String -> String -> [String] -> IO [(String, [Double])]
-makeTotalPool market inDN timePeriod = do
+makeTotalPool db_driver dbFile timePeriod = do
   allCsvFiles <- dirSearchForCsvFiles inDN market
   let csvFilesInNeededTime = filter (\x->pickDates x market timePeriod) allCsvFiles
-  csvFilesData <- forM csvFilesInNeededTime getDataFromCsv
-  let totalData = toAscList $ concatCsvData csvFilesData
+  forM sqlFilesInNededTime (\a -> do
+                              system $ db_driver ++ " " ++ dbFile ++ " < \"" a ++ "\"")
+  conn <- Database.HDBC.Sqlite3.connectSqlite3 dbFile
+  fileData <- getDataFromSqlDB conn timePeriod
+  let totalData = toAscList $ concatCsvData $ getDateList filesData
   return totalData
                                    
-dirSearchForCsvFiles :: String -> String -> IO [String]
-dirSearchForCsvFiles topDirI market = do
+dirSearchForCsvFiles :: String -> String -> String -> IO [String]
+dirSearchForCsvFiles topDirI market suffixFileName = do
+  --suffixFileName = ".sql"
   topDirContents <- System.Directory.getDirectoryContents topDirI
   let properNames = filter (`notElem` [".",".."]) topDirContents
-      csvFileNames = filter (market `isPrefixOf`) $ filter (".csv" `isSuffixOf`) properNames
-      notCsvFileNames = filter (`notElem` csvFileNames) properNames
-  xs <- forM notCsvFileNames $ \name -> do
+      fileNames = filter (market `isPrefixOf`) $ filter (suffixFileName `isSuffixOf`) properNames
+      notNeedfileNames = filter (`notElem` fileNames) properNames
+  xs <- forM notNeedileNames $ \name -> do
                                 let pathI = topDirI </> name
                                 isDir <- System.Directory.doesDirectoryExist pathI
                                 if isDir
                                   then do
-                                    csvDeepFiles <- dirSearchForCsvFiles pathI market
-                                    return $ unlines csvDeepFiles
+                                    deepFiles <- dirSearchForCsvFiles pathI market
+                                    return $ unlines deepFiles
                                   else  return ""
-  let inDirCsvFileNames = filter (`notElem` [""]) xs
-      totalCsvFilesList = (map (topDirI </>) csvFileNames) ++ (concat $ map lines inDirCsvFileNames)
-  return totalCsvFilesList
+  let inDirFileNames = filter (`notElem` [""]) xs
+      totalFilesList = (map (topDirI </>) fileNames) ++ (concat $ map lines inDirFileNames)
+  return totalFilesList
          
-getDataFromCsv :: FilePath -> IO [(String, Double)]
-getDataFromCsv inFN = do
-  inh <- openFile inFN ReadMode
-  csvData <- mainGetLoop inh
-  hClose inh
-  return csvData
-
-mainGetLoop :: Handle -> IO [(String, Double)]
-mainGetLoop inh = do
-  ineof <- hIsEOF inh
-  if ineof
-    then return []
-    else do
-      inpStr <- hGetLine inh
-      dataRows <- mainGetLoop inh
-      let currentDataRows = (getDataFromStr inpStr):dataRows
-      return currentDataRows
+getDataFromSqlDB :: FilePath -> IO [(String, Double)]
+getDataFromSqlDB conn [low, hi]= do
+  let quereStr = "SELECT ticker, date, closePrice FROM prices WHERE (date < "
+                 ++ hiStr ++") AND (date > " ++ lowStr ++ ")"
+      hiStr = changeDateFormat hi "%Y%m%d" "%Y-%m-%d %H:%M:%S"
+      lowStr = changeDateFormat low "%Y%m%d" "%Y-%m-%d %H:%M:%S"
+  allSqlData <- quickQuery' conn quereStr --contain all symbols... need to get symbol and [all prices on time period....]
+  let allDataList = map (\a,b,c -> (fromSql a, fromSql b, fromSql c)) allSqlData
