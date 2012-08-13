@@ -8,13 +8,13 @@ module SRC.App.GenAlg ( findStablePortfolio
 import SRC.App.PoolGenerator
 import SRC.App.UsefullFunc
 import Data.Maybe
-import Data.List (sum, map, nub)
+import Data.List (sum, map, nub, lookup)
 import System.Random (mkStdGen, random, randoms)
 import System.IO(IOMode(..))
 import GA (Entity(..), GAConfig(..), 
-           evolveVerbose, randomSearch)
+           evolveVerbose, evolve, randomSearch)
 
-instance Entity [(String, [Double])] Double Int [(String, [Double])] IO where
+instance Entity [(String, [Double])] Double [(String, [Double])] [(String, [Double])] IO where
 
     -- generate a random entity, i.e. a random list of quot  
     genRandom pool seed = return $ take n $ Data.List.map ((!!) pool) is
@@ -44,21 +44,22 @@ instance Entity [(String, [Double])] Double Int [(String, [Double])] IO where
           addQuotes = Data.List.map ((!!) pool) is
 
     -- calculate the goodness of quotes
-    score _ eAscList = do
-        let
-            e = map (\(a,b) -> b) eAscList              
+    score scoreAscList eAscList = do
+      let
+            e = map (\(a,b) -> b) $ eAscList ++ scoreAscList
             n = fromIntegral $ length $ e !! 0
             buyPrice = funOfSomeElement (+) e 0
             sumList = funOfListsElements (+) e
-            goodness = (Data.List.sum $Data.List.map (\ x -> (x - buyPrice)**2.0) sumList) / n
+            goodness = (Data.List.sum $Data.List.map (\ x -> (x - buyPrice)**2.0) sumList) / n / buyPrice / buyPrice
         --print e
-        return $ Just goodness 
+      return $ Just goodness 
 
     -- whether or not a scored entity is perfect
     isPerfect (_, s) = s == 0.0
 
 findStablePortfolio :: String
                     -> String
+                    -> [String]
                     -> [String]
                     -> ( Int
                        , Int
@@ -68,8 +69,11 @@ findStablePortfolio :: String
                        , Float
                        , Float)
                     -> IO ()
-findStablePortfolio market inDN timePeriod (population, bests, maxGen, crossRate, mutRate, crossPar, mutPar) =
+findStablePortfolio market dbName timePeriod
+                    portfolioSymbolsList
+                    (population, bests, maxGen, crossRate, mutRate, crossPar, mutPar) =
     do
+      quotesPool <- makeTotalPool market dbName timePeriod
       let cfg = GAConfig 
                 population -- 1000 -- population size
                 bests      -- 50   -- archive size (best entities to keep track of)
@@ -82,11 +86,13 @@ findStablePortfolio market inDN timePeriod (population, bests, maxGen, crossRate
                 False              -- don't rescore archive in each generation
 
           g = mkStdGen 0 -- random generator
-                       
+          portfolio = concat $ Data.List.map (\x -> filter (\ (a,_) -> a == x) quotesPool) portfolioSymbolsList
+      putStrLn "Your portfolio is:"
+      print portfolio
       -- pool of characters to pick from: printable ASCII characters
-      quotesPool <- makeTotalPool market inDN timePeriod
       -- Do the evolution!
-      es <- evolveVerbose g cfg quotesPool 1
+      es <- evolveVerbose g cfg quotesPool portfolio
+--      es <- evolve g cfg quotesPool portfolio
       let e = snd $ head es :: [(String, [Double])]
           
       putStrLn $ "best entity (GA): " ++ (show $ Data.List.map (\(a,b) -> a) e)

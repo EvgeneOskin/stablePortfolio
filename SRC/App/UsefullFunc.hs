@@ -1,7 +1,7 @@
 module SRC.App.UsefullFunc ( changeDateFormat
                            , getDataFromStr
                            , pickDates
-                           , concatCsvData
+                           , concatData
                            , funOfListsElements
                            , funOfSomeElement
                            , separateByDate
@@ -32,7 +32,7 @@ pickDates x market [low, hi] = (strForCompare >= low) && (strForCompare <= hi)
 
 concatData :: Ord k => [[(k, a)]] -> Data.Map.Map k [a]
 concatData (x:[]) = Data.Map.map (\a -> [a]) $ fromList x
-concatData (x:xs) = intersectionWith (\a b -> [a] ++ b) (fromList x) $ concatCsvData xs
+concatData (x:xs) = intersectionWith (\a b -> [a] ++ b) (fromList x) $ concatData xs
 
 funOfListsElements :: (b -> b -> b) -> [[b]] -> [b] 
 funOfListsElements f (x:[]) = x

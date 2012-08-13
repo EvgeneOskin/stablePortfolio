@@ -19,6 +19,14 @@ data Options = Options
  { optMarket      :: String
  , optInputDir    :: String
  , optTimePeriod  :: String
+ , optPopulation  :: String
+ , optArchiveSize :: String
+ , optMaxGensNum  :: String
+ , optCrossRate   :: String
+ , optMutatRate   :: String
+ , optCrossPar    :: String
+ , optMutatPar    :: String
+ , optPortfolio   :: String
  , optHelp        :: Bool
  } deriving Show
 
@@ -27,37 +35,72 @@ defaultOptions    = Options
  { optMarket      = ""
  , optInputDir    = ""
  , optTimePeriod  = ""
+ , optPopulation  = "1000"
+ , optArchiveSize = "200"
+ , optMaxGensNum  = "300"
+ , optCrossRate   = "0.8"
+ , optMutatRate   = "0.2"
+ , optCrossPar    = "0.0"
+ , optMutatPar    = "0.5"
+ , optPortfolio   = ""
  , optHelp        = False
  }
 
 options :: [OptDescr (Options -> Options)]
 options =
  [ Option ['M'] ["market"]
-              (ReqArg (\ f opts -> opts { optMarket     = f })
+              (ReqArg (\ f opts -> opts { optMarket      = f })
                           "\"STR\"") "market name"
- , Option ['I'] ["input_dir"]
-              (ReqArg (\ f opts -> opts { optInputDir   = f })
-                         "\"STR\"") "output directory"
+ , Option ['I'] ["input_db"]
+              (ReqArg (\ f opts -> opts { optInputDir    = f })
+                         "\"STR\"") "database with quote"
  , Option ['T'] ["time_period"]
-              (ReqArg (\ f opts -> opts { optTimePeriod = f })
+              (ReqArg (\ f opts -> opts { optTimePeriod  = f })
                          "\"DATE DATE\"") "period of date"
+ , Option ['P'] ["population"]
+              (ReqArg (\ f opts -> opts { optPopulation  = f })
+                          "\"INT\"") "population size"
+ , Option ['A'] ["archive"]
+              (ReqArg (\ f opts -> opts { optArchiveSize = f })
+                          "\"INT\"") "archive size (best entities to keep track of)"
+ , Option ['G'] ["max_gens"]
+              (ReqArg (\ f opts -> opts { optMaxGensNum  = f })
+                         "\"INT\"") "maximum number of generations"
+ , Option ['x'] ["cross_rate"]
+              (ReqArg (\ f opts -> opts { optCrossRate   = f })
+                         "\"FLOAT\"") "crossover rate (% of entities by crossover)"
+ , Option ['y'] ["mutat_rate"]
+              (ReqArg (\ f opts -> opts { optMutatRate   = f })
+                         "\"FLOAT\"") "mutation rate (% of entities by mutation)"
+ , Option ['X'] ["Cross_Par"]
+              (ReqArg (\ f opts -> opts { optCrossPar    = f })
+                         "\"FLOAT\"") "parameter for crossover (not used here)"
+ , Option ['Y'] ["Mutat_Par"]
+              (ReqArg (\ f opts -> opts { optMutatPar    = f })
+                          "\"FLOAT\"") "parameter for mutation (% of replaced letters)"
+ , Option ['S'] ["portfolio"]
+              (ReqArg (\ f opts -> opts { optPortfolio    = f })
+                          "String") "List of Symbols which you have"
  , Option ['H'] ["help"]
-              (NoArg (\   opts -> opts { optHelp        = True })
+              (NoArg (\   opts -> opts { optHelp         = True })
               ) "help"
  ]
 
-run :: (Options, t) -> IO ()
-run (Options _ _ _ True, _)  = do
+run :: (Options, t) -> IO ()  
+run (Options _ _ _ _ _ _ _ _ _ _ _ True, _)  = do
+
   putStrLn $ usageInfo "" options
 
-run (Options market inDN timePeriodStr _, _)  = do
-  let parametersGA = ( 1000 -- population size
-                     , 50 -- archive size (best entities to keep track of)
-                     , 300 -- maximum number of generations
-                     , 0.8 -- crossover rate (% of entities by crossover)
-                     , 0.2 -- mutation rate (% of entities by mutation)
-                     , 0.0 -- parameter for crossover (not used here)
-                     , 0.5 -- parameter for mutation (% of replaced letters)
-                    )
+run (Options market dbName timePeriodStr
+             population bests maxGen crossRate mutRate crossPar mutPar portfolioStrCsv _, _)  = do
+  let parametersGA = ( read population :: Int -- 1000 -- population size
+                     , read bests      :: Int -- 50   -- archive size (best entities to keep track of)
+                     , read maxGen     :: Int  -- 300  -- maximum number of generations
+                     , read crossRate  :: Float -- 0.8  -- crossover rate (% of entities by crossover)
+                     , read mutRate    :: Float  -- 0.5  -- mutation rate (% of entities by mutation)
+                     , read crossPar   :: Float -- 0.0  -- parameter for crossover (not used here)
+                     , read mutPar     :: Float -- 0.2  -- parameter for mutation (% of replaced letters)
+                     )
       timePeriod = (endBy " " timePeriodStr)
-  findStablePortfolio market inDN timePeriod parametersGA
+      portfolio = endBy "," portfolioStrCsv
+  findStablePortfolio market dbName timePeriod portfolio parametersGA
