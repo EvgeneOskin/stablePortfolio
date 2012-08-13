@@ -7,4 +7,4 @@ Build-Type:          Simple
 Cabal-Version:       >=1.2
 Executable StablePortfolio
   Main-is:           SRC/StablePortfolio.hs
-  Build-Depends:     filepath, directory, regex-posix, old-locale, split, GA, random, containers, time, base >= 3 && < 5
+  Build-Depends:     filepath, directory, regex-posix, old-locale, split, GA, random, containers, time, HDBC-sqlite3, HDBC, base >= 3 && < 5
