@@ -21,7 +21,7 @@ Runing
  *path/to/database* is a path to Sqlite3 database.
 If path contains " " (space) you should put path into quote ("path").
 
- *date period* is period of date in format "DATE DATE"
+ *date period* is period of date in format "yyyymmdd yyyymmdd" (with quote)
 
  Type this:
 > $./stablePortfolio -H
