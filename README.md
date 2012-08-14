@@ -14,7 +14,7 @@ Instalation
 Runing
 ------
 
-> $./stablePortfolio -M *markets_symbols* -I *path/to/database* -T *date period* 
+> $./stablePortfolio -I *path/to/database* -T *date period* 
 
  *market_symbol* is a market symbol. Don't need now
 
