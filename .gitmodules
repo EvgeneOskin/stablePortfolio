@@ -1,0 +1,3 @@
+[submodule "pythonPrototype"]
+	path = pythonPrototype
+	url = git@github.com:EvgeneOskin/Stable-Portfolio--Prototype-.git
