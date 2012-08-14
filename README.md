@@ -1,9 +1,9 @@
-csvLoader
-======
+stablePortfolio
+===============
 
 Instalation
 -----------
-> $ghc --make set1up
+> $ghc --make setup
 
 > $./setup configure --prefix=$HOME --user
 
@@ -14,14 +14,16 @@ Instalation
 Runing
 ------
 
-> $./csvLoader -M *markets_symbols* -I *path/to/dir/with/csv* -T *date period* 
+> $./stablePortfolio -M *markets_symbols* -I *path/to/database* -T *date period* 
 
- *market_symbol* is a market symbol
+ *market_symbol* is a market symbol. Don't need now
 
- *path/to/dir/with/csv* is a path to directory which contain *.csv files.
+ *path/to/database* is a path to Sqlite3 database.
 If path contains " " (space) you should put path into quote ("path").
 
  *date period* is period of date in format "DATE DATE"
 
-  Which *.csv files will by searched? csv filename format should be *market*_DATE.csv
-  Format of csv should be like on eodate ftp server ()
+ Type this:
+> $./stablePortfolio -H
+
+  to see all options  
