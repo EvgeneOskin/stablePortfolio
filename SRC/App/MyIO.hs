@@ -59,28 +59,28 @@ options =
                          "\"DATE DATE\"") "period of date"
  , Option ['P'] ["population"]
               (ReqArg (\ f opts -> opts { optPopulation  = f })
-                          "\"INT\"") "population size"
+                          "\"INT\"") "population size\n defualt 1000"
  , Option ['A'] ["archive"]
               (ReqArg (\ f opts -> opts { optArchiveSize = f })
-                          "\"INT\"") "archive size (best entities to keep track of)"
+                          "\"INT\"") "archive size (best entities to keep track of)\n defualt 200"
  , Option ['G'] ["max_gens"]
               (ReqArg (\ f opts -> opts { optMaxGensNum  = f })
-                         "\"INT\"") "maximum number of generations"
+                         "\"INT\"") "maximum number of generations\n defualt 300"
  , Option ['x'] ["cross_rate"]
               (ReqArg (\ f opts -> opts { optCrossRate   = f })
-                         "\"FLOAT\"") "crossover rate (% of entities by crossover)"
+                         "\"FLOAT\"") "crossover rate (% of entities by crossover)\n defualt 0.8"
  , Option ['y'] ["mutat_rate"]
               (ReqArg (\ f opts -> opts { optMutatRate   = f })
-                         "\"FLOAT\"") "mutation rate (% of entities by mutation)"
+                         "\"FLOAT\"") "mutation rate (% of entities by mutation)\n defualt 0.2"
  , Option ['X'] ["Cross_Par"]
               (ReqArg (\ f opts -> opts { optCrossPar    = f })
-                         "\"FLOAT\"") "parameter for crossover (not used here)"
+                         "\"FLOAT\"") "parameter for crossover (not used here)\n defualt 0.0"
  , Option ['Y'] ["Mutat_Par"]
               (ReqArg (\ f opts -> opts { optMutatPar    = f })
-                          "\"FLOAT\"") "parameter for mutation (% of replaced letters)"
+                          "\"FLOAT\"") "parameter for mutation (% of replaced quotes)\n defualt 0.5"
  , Option ['S'] ["portfolio"]
               (ReqArg (\ f opts -> opts { optPortfolio    = f })
-                          "String") "List of Symbols which you have"
+                          "String") "List of Symbols which you have\n defualt \"\""
  , Option ['H'] ["help"]
               (NoArg (\   opts -> opts { optHelp         = True })
               ) "help"
