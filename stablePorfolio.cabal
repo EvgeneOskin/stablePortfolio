@@ -6,5 +6,5 @@ Author:              Evgene Oskin
 Build-Type:          Simple
 Cabal-Version:       >=1.2
 Executable StablePortfolio
-  Main-is:           SRC/StablePortfolio.hs
+  Main-is:           SRC/stablePortfolio.hs
   Build-Depends:     filepath, directory, regex-posix, old-locale, split, GA, random, containers, time, HDBC-sqlite3, HDBC, base >= 3 && < 5
