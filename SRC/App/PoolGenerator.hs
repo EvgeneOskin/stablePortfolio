@@ -12,7 +12,7 @@ makeTotalPool :: String -> String -> [String] -> IO [(String, [Double])]
 makeTotalPool _ dbFile timePeriod = do
   conn <- Database.HDBC.Sqlite3.connectSqlite3 dbFile
   fileData <- getDataFromSqlDB conn timePeriod
-  let totalData = toAscList $ concatData $ separateByDate fileData
+  let totalData = (toAscList . (concatData . separateByDate)) fileData
   Database.HDBC.disconnect conn
   return totalData
               
@@ -23,6 +23,5 @@ getDataFromSqlDB conn [low, hi]= do
       hiStr  = changeDateFormat hi  "%Y%m%d" "\"%Y-%m-%d %H:%M:%S\""
       lowStr = changeDateFormat low "%Y%m%d" "\"%Y-%m-%d %H:%M:%S\""
   allSqlData <- Database.HDBC.quickQuery' conn quereStr []
-  --contain all symbols... need to get (symbol, [all prices on time period...])
   let allDataList = map (\[a, b, c] -> (fromSql a, fromSql b, fromSql c)) allSqlData :: [(String, String, Double)]
   return allDataList

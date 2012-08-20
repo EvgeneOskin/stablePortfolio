@@ -5,6 +5,7 @@ module SRC.App.UsefullFunc ( changeDateFormat
                            , funOfListsElements
                            , funOfSomeElement
                            , separateByDate
+                           , calculateGoodness
 ) where
 
   
@@ -49,3 +50,11 @@ separateByDate xs =
     where timeList = getDateTimeList xs
 
 getDateTimeList xs = Data.List.nub $ Data.List.map (\(a,b,c) -> b) xs
+
+calculateGoodness :: [(String, [Double])] -> Double
+calculateGoodness eAscList = (Data.List.sum $ Data.List.map (\ x -> (x - buyPrice)**2.0) sumList) / n / buyPrice / buyPrice
+    where
+      n = fromIntegral $ length $ e !! 0
+      buyPrice = funOfSomeElement (+) e 0
+      sumList = funOfListsElements (+) e
+      e = Data.List.map snd eAscList
