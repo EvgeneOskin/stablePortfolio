@@ -3,13 +3,13 @@ module SRC.App.MyIO ( processArgs
                     , Options(..)
 ) where
 
-import Test.QuickCheck
+import Test.QuickCheck (Result(..))
 import SRC.App.PoolGenerator
 import SRC.App.TestGenAlg
 import SRC.App.GenAlg
 import System.Environment (getArgs, getEnv)
 import System.Console.GetOpt
-import Data.List.Split
+import Data.List.Split (endBy)
 
 processArgs :: [String] -> IO (Options, [String])
 processArgs argv =
@@ -30,6 +30,7 @@ data Options = Options
  , optCrossPar    :: String
  , optMutatPar    :: String
  , optPortfolio   :: String
+ , optCapital     :: String
  , optTest        :: Bool
  , optHelp        :: Bool
  } deriving Show
@@ -47,6 +48,7 @@ defaultOptions    = Options
  , optCrossPar    = "0.0"
  , optMutatPar    = "0.5"
  , optPortfolio   = ""
+ , optCapital     = "0.0"
  , optTest        = False
  , optHelp        = False
  }
@@ -67,39 +69,49 @@ options =
                              "\"INT\"") "population size\n defualt 1000"
     , Option ['A'] ["archive"]
                  (ReqArg (\ f opts -> opts { optArchiveSize = f })
-                             "\"INT\"") "archive size (best entities to keep track of)\n defualt 200"
+                             "\"INT\"")
+                 "archive size (best entities to keep track of)\n defualt 200"
     , Option ['G'] ["max_gens"]
                  (ReqArg (\ f opts -> opts { optMaxGensNum  = f })
-                             "\"INT\"") "maximum number of generations\n defualt 300"
+                             "\"INT\"")
+                 "maximum number of generations\n defualt 300"
     , Option ['x'] ["cross_rate"]
                  (ReqArg (\ f opts -> opts { optCrossRate   = f })
-                             "\"FLOAT\"") "crossover rate (% of entities by crossover)\n defualt 0.8"
+                             "\"FLOAT\"")
+                 "crossover rate (% of entities by crossover)\n defualt 0.8"
     , Option ['y'] ["mutat_rate"]
                  (ReqArg (\ f opts -> opts { optMutatRate   = f })
-                             "\"FLOAT\"") "mutation rate (% of entities by mutation)\n defualt 0.2"
+                             "\"FLOAT\"")
+                 "mutation rate (% of entities by mutation)\n defualt 0.2"
     , Option ['X'] ["Cross_Par"]
                  (ReqArg (\ f opts -> opts { optCrossPar    = f })
-                             "\"FLOAT\"") "parameter for crossover (not used here)\n defualt 0.0"
+                             "\"FLOAT\"")
+                 "parameter for crossover (not used here)\n defualt 0.0"
     , Option ['Y'] ["Mutat_Par"]
                  (ReqArg (\ f opts -> opts { optMutatPar    = f })
-                             "\"FLOAT\"") "parameter for mutation (% of replaced quotes)\n defualt 0.5"
+                             "\"FLOAT\"")
+                 "parameter for mutation (% of replaced quotes)\n defualt 0.5"
     , Option ['S'] ["portfolio"]
                  (ReqArg (\ f opts -> opts { optPortfolio    = f })
-                             "String") "List of Symbols which you have\n defualt \"\""
+                             "\"STR\"") "List of Symbols which you have\n defualt \"\""
+    , Option ['C'] ["capital"]
+                 (ReqArg (\ f opts -> opts { optCapital      = f })
+                             "\"DOUBLE\"") "What Capital do you have\n defualt \"0.0\""
     , Option ['T'] ["test"]
-                 (NoArg (\   opts -> opts { optTest         = True })
+                 (NoArg (\    opts -> opts { optTest         = True })
                  ) "run only after success test"
     , Option ['H'] ["help"]
-                 (NoArg (\   opts -> opts { optHelp         = True })
+                 (NoArg (\    opts -> opts { optHelp         = True })
                  ) "help"
     ]
 
 run :: (Options, t) -> IO ()  
-run (Options _ _ _ _ _ _ _ _ _ _ _ _ True, _)  = do
+run (Options _ _ _ _ _ _ _ _ _ _ _ _ _ True, _)  = do
   putStrLn $ usageInfo "" options
 
 run (Options market dbName timePeriodStr
-             population bests maxGen crossRate mutRate crossPar mutPar portfolioStrCsv True _, _)  = do
+             population bests maxGen crossRate mutRate
+                        crossPar mutPar _ _ True _, _)  = do
   let parametersGA = ( read population :: Int -- 1000 -- population size
                      , read bests      :: Int -- 50   -- archive size (best entities to keep track of)
                      , read maxGen     :: Int  -- 300  -- maximum number of generations
@@ -109,21 +121,20 @@ run (Options market dbName timePeriodStr
                      , read mutPar     :: Float -- 0.2  -- parameter for mutation (% of replaced letters)
                      )
       timePeriod = (endBy " " timePeriodStr)
-      portfolio = endBy "," portfolioStrCsv
   result <- myTest parametersGA dbName timePeriod
   print result
   case result of
     (Success _ _ _) -> do
-                quotesPool <- makeTotalPool market dbName timePeriod
-                bestEntity <- findStablePortfolio quotesPool portfolio parametersGA
-                return ()
+                putStrLn "All OK. You can work with this parameters"
     _               -> do
                 putStrLn "This is not good parameters:"
                 putStrLn "    try to increase population or archive size (\"-P\" and \"-A\" flags) "
+  putStrLn $ "Parameters was: " ++ show parametersGA 
 
            
 run (Options market dbName timePeriodStr
-             population bests maxGen crossRate mutRate crossPar mutPar portfolioStrCsv _ _, _)  = do
+             population bests maxGen crossRate mutRate
+                        crossPar mutPar portfolioStrCsv capitalStr _ _, _)  = do
   let parametersGA = ( read population :: Int -- 1000 -- population size
                      , read bests      :: Int -- 100   -- archive size (best entities to keep track of)
                      , read maxGen     :: Int  -- 150  -- maximum number of generations
@@ -132,8 +143,9 @@ run (Options market dbName timePeriodStr
                      , read crossPar   :: Float -- 0.0  -- parameter for crossover (not used here)
                      , read mutPar     :: Float -- 0.2  -- parameter for mutation (% of replaced letters)
                      )
+      capital = read capitalStr :: Double
       timePeriod = (endBy " " timePeriodStr)
       portfolio = endBy "," portfolioStrCsv
   quotesPool <- makeTotalPool market dbName timePeriod
-  bestEntity <- findStablePortfolio quotesPool portfolio parametersGA
+  bestEntity <- findStablePortfolio quotesPool (capital, portfolio) parametersGA
   return ()
