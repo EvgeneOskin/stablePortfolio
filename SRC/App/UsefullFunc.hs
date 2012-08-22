@@ -41,6 +41,7 @@ funOfListsElements f (x:[]) = x
 funOfListsElements f (x:xs) = Data.List.zipWith f x $ funOfListsElements f xs
 
 funOfSomeElement :: (a -> a -> a) -> [[a]] -> Int -> a
+--it's not determine for [], because "what it should be? zero?"
 funOfSomeElement f (x:[]) index = x !! index                             
 funOfSomeElement f (x:xs) index = f (x !! index) $ funOfSomeElement f xs index
 

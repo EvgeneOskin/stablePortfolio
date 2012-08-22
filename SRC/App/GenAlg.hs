@@ -8,8 +8,8 @@ module SRC.App.GenAlg ( findStablePortfolio
 import SRC.App.UsefullFunc
 import GHC.Float (int2Float, int2Double)
 import Data.Maybe (fromJust)
-import Data.List (sum, map, nub, lookup)
-import System.Random (mkStdGen, random, randoms)
+import Data.List (sum, map, nub, lookup, sort)
+import System.Random (mkStdGen, randomR, randomRs)
 import System.IO(IOMode(..))
 import GA (Entity(..), GAConfig(..), 
            evolveVerbose, randomSearch)
@@ -19,9 +19,9 @@ instance Entity [(String, [Double])] Double (Double, [(String, [Double])]) [(Str
     genRandom pool seed = return $ take n $ Data.List.map ((!!) pool) is
         where
           g = mkStdGen seed
-          n = 1 + (fst $ random g) `mod` k :: Int
-          k = length pool 
-          notIs = Data.List.map (flip mod k) $ randoms g
+          n = fst $ randomR (1, pL) g :: Int
+          pL = length pool
+          notIs = randomRs (0, pL - 1) g
           is = Data.List.nub notIs    
  
     -- crossover operator: mix (and trim to shortest entity)
@@ -30,20 +30,28 @@ instance Entity [(String, [Double])] Double (Double, [(String, [Double])]) [(Str
           n = round $ int2Double (length e1 + length e2) / 2 :: Int
           g = mkStdGen seed
           cps = zipWith (\ x y -> [x, y]) e1 e2
-          picks = Data.List.map (flip mod 2) $ randoms g
+          picks = randomRs (0, 1) g
           e = zipWith (!!) cps picks
 
 
     -- mutation operator: delete old and add new random quotes
-    mutation pool p seed e = return $ Just $ take k $ Data.List.nub $ (drop x e) ++ addQuotes
+    mutation pool p seed e = return $ Just $ take pick $ Data.List.nub $ dropedEntity ++ addQuotes
         where
           g = mkStdGen seed
-          n = int2Float (1 + length e)
-          k = 1 + round (p*n) :: Int
-          x = mod (fst (random g)) k
-          is = Data.List.map (flip mod $ length pool) $ randoms g
-          addQuotes = Data.List.map ((!!) pool) is
+          pL =length pool
+          eL = length e
+          dL = round (p*int2Float eL) :: Int
+          x = fst $ randomR (0, dL) g :: Int --how much should be droped (1,dL)<-best
+          dropedEntity = drop x e
+          
+          smallest = if eL - x < 2   then 2  else eL - x
+          largest  = if eL + x >= pL then pL else eL + x
+          pick =  fst $ randomR (smallest, largest) g
 
+          newPool = filter (`notElem` dropedEntity) pool
+          is = randomRs (0, pL - eL + x - 1) g
+          addQuotes = Data.List.map ((!!) newPool) is
+                         
     -- calculate the goodness of quotes
     score' (capital, scoreAscList) eAscList = Just $ goodnessE + goodnessP
         where tEntiy = eAscList ++ scoreAscList
@@ -52,20 +60,19 @@ instance Entity [(String, [Double])] Double (Double, [(String, [Double])]) [(Str
               goodnessP = if capital /= 0.0
                             then (capital - buyPrice)^2 / capital / capital
                             else 0.0
-      --return $ Just $ (exp $ -1/goodness) * (- log byuPrice)      -- + log (fromInteger (toInteger $ length eAscList) :: Double)
 
     -- whether or not a scored entity is perfect
---    isPerfect (_, s) = s == 0.0
+    isPerfect (_, s) = s == 0.0
 
-    showGeneration index (_,s) = "(gen:" ++ show index ++ ") Best Entity " ++
-                                 show symbols ++ " its length is "++ show (length symbols) ++
-                                 " [fitness: " ++ show (fromJust fitness) ++ "] " ++"(gen:" ++ show index ++ ")"
+    showGeneration index (_,s) = "(gen: " ++ show index ++ ") Best Entity " ++
+                                 show (sort symbols) ++ " its length is "++ show (length symbols) ++
+                                 " [fitness: " ++ show (fromJust fitness) ++ "] " ++"(gen: " ++ show index ++ ")"
         where (fitness, e) = head s
               symbols = Data.List.map fst  e
 
-    hasConverged xs = amountEntityUnique / amountEntity < 0.01
-        where amountEntityUnique = int2Double $ length (Data.List.nub xs)
-              amountEntity = int2Double $ length (xs)
+--    hasConverged xs = amountEntityUnique / amountEntity < 0.01
+--        where amountEntityUnique = int2Double $ length (Data.List.nub xs)
+--              amountEntity = int2Double $ length (xs)
                                    
 findStablePortfolio :: [(String, [Double])]
                     -> (Double, [String])
