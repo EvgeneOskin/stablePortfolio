@@ -41,12 +41,12 @@ defaultOptions    = Options
  , optInputDir    = ""
  , optTimePeriod  = ""
  , optPopulation  = "1000"
- , optArchiveSize = "100"
- , optMaxGensNum  = "150"
+ , optArchiveSize = "500"
+ , optMaxGensNum  = "900"
  , optCrossRate   = "0.8"
- , optMutatRate   = "0.2"
+ , optMutatRate   = "0.1"
  , optCrossPar    = "0.0"
- , optMutatPar    = "0.5"
+ , optMutatPar    = "1.0"
  , optPortfolio   = ""
  , optCapital     = "0.0"
  , optTest        = False
@@ -70,11 +70,11 @@ options =
     , Option ['A'] ["archive"]
                  (ReqArg (\ f opts -> opts { optArchiveSize = f })
                              "\"INT\"")
-                 "archive size (best entities to keep track of)\n default 200"
+                 "archive size (best entities to keep track of)\n default 900"
     , Option ['G'] ["max_gens"]
                  (ReqArg (\ f opts -> opts { optMaxGensNum  = f })
                              "\"INT\"")
-                 "maximum number of generations\n default 300"
+                 "maximum number of generations\n default 500"
     , Option ['x'] ["cross_rate"]
                  (ReqArg (\ f opts -> opts { optCrossRate   = f })
                              "\"FLOAT\"")
@@ -82,7 +82,7 @@ options =
     , Option ['y'] ["mutat_rate"]
                  (ReqArg (\ f opts -> opts { optMutatRate   = f })
                              "\"FLOAT\"")
-                 "mutation rate (% of entities by mutation)\n default 0.2"
+                 "mutation rate (% of entities by mutation)\n default 0.1"
     , Option ['X'] ["Cross_Par"]
                  (ReqArg (\ f opts -> opts { optCrossPar    = f })
                              "\"FLOAT\"")
@@ -90,7 +90,7 @@ options =
     , Option ['Y'] ["Mutat_Par"]
                  (ReqArg (\ f opts -> opts { optMutatPar    = f })
                              "\"FLOAT\"")
-                 "parameter for mutation (% of replaced quotes)\n default 0.5"
+                 "parameter for mutation (% of replaced quotes)\n default 1.0"
     , Option ['S'] ["portfolio"]
                  (ReqArg (\ f opts -> opts { optPortfolio    = f })
                              "\"STR\"") "List of Symbols which you have\n default \"\""
@@ -137,11 +137,11 @@ run (Options market dbName timePeriodStr
                         crossPar mutPar portfolioStrCsv capitalStr _ _, _)  = do
   let parametersGA = ( read population :: Int -- 1000 -- population size
                      , read bests      :: Int -- 100   -- archive size (best entities to keep track of)
-                     , read maxGen     :: Int  -- 150  -- maximum number of generations
+                     , read maxGen     :: Int  -- 900  -- maximum number of generations
                      , read crossRate  :: Float -- 0.8  -- crossover rate (% of entities by crossover)
-                     , read mutRate    :: Float  -- 0.5  -- mutation rate (% of entities by mutation)
+                     , read mutRate    :: Float  -- 0.1  -- mutation rate (% of entities by mutation)
                      , read crossPar   :: Float -- 0.0  -- parameter for crossover (not used here)
-                     , read mutPar     :: Float -- 0.2  -- parameter for mutation (% of replaced letters)
+                     , read mutPar     :: Float -- 1.0  -- parameter for mutation (% of replaced letters)
                      )
       capital = read capitalStr :: Double
       timePeriod = (endBy " " timePeriodStr)
